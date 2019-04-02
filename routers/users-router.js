@@ -62,12 +62,30 @@ router.get('/users', restricted, async (req, res) => {
     }
 })
 
+router.get('/logout', (req, res) => {
+    if(req.session) {
+        req.session.destroy(err => {
+            if(err) {
+                res.status(500).json({ error });
+            } else {
+                res.status(200).json({ message: 'bye' });
+            }
+        });
+    } else {
+        res.status(200).json({ message: 'bye' });
+    }
+})
+
 function restricted(req, res, next) {
+    try {
         if(req && req.session && req.session.user) {
             next();
         } else {
           res.status(401).json({ message: 'Invalid Credentials' });
         }
+    } catch (error) {
+        res.status(500).json({ message: "you broke it" })
+    }
 }
 
 module.exports = router;
