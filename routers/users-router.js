@@ -40,6 +40,9 @@ router.post('/login', async (req, res) => {
         const user = await db("users").where({ name }).first();
 
         if (user && bcrypt.compareSync(pass, user.pass)) {
+            // req.session is added by express-session
+            req.session.user = user;
+            console.log(req.session)
           res.status(200).json({ message: `Welcome ${user.name}!`});
         } else {
           res.status(401).json({ message: 'Invalid Credentials' });
@@ -59,24 +62,12 @@ router.get('/users', restricted, async (req, res) => {
     }
 })
 
-async function restricted(req, res, next) {
-    try {
-        let { name, pass } = req.headers;
-
-        if(name && pass) {
-        const user = await db("users").where({ name }).first();
-
-        if (user && bcrypt.compareSync(pass, user.pass)) {
-          next();
+function restricted(req, res, next) {
+        if(req && req.session && req.session.user) {
+            next();
         } else {
           res.status(401).json({ message: 'Invalid Credentials' });
         }
-
-    } else {
-        res.status(500).json({ message: 'Please provide credentials' })
-    }} catch (error) {
-        res.status(500).json(error)
-    }
 }
 
 module.exports = router;
